@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AutoMatchingSearchApp</string>
+    <string name="google_url">https://www.google.co.jp/search?&amp;num=10</string>
 </resources>

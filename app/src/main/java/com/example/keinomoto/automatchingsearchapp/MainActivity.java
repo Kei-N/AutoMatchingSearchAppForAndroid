@@ -1,26 +1,31 @@
 package com.example.keinomoto.automatchingsearchapp;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
 
     private ListView createView;
-    private ArrayAdapter<List<SearchInfo>> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        createView = (ListView)findViewById(R.id.createResult);
 
         // "My keywords"ボタン押下時の処理
         Button myKeyButton = (Button) findViewById(R.id.keyButton);
@@ -42,15 +47,50 @@ public class MainActivity extends AppCompatActivity {
                 // ボタン押下時の処理を記述
                 // Google検索URL取得
                 String google_url = getString(R.string.google_url);
-                // TODO DBからkeywordをランダムで2件取得
-                String keyword1 = "プログラミング";
-                String keyword2 = "筋トレ";
+                // DBからkeywordをランダムで2件取得
+                List<String> keywordList = getKeyRand();
+                if(keywordList.size() == 2){
+                    String keyword1 = keywordList.get(0);
+                    String keyword2 = keywordList.get(1);
 
-                HTTPCommunication httpCom = new HTTPCommunication(MainActivity.this);
-                // GoogleAND検索結果をスクレイピングし、ListViewに表示
-                httpCom.execute(google_url, keyword1, keyword2);
+                    HTTPCommunication httpCom = new HTTPCommunication(MainActivity.this, createView);
+                    // GoogleAND検索結果をスクレイピングし、ListViewに表示
+                    httpCom.execute(google_url, keyword1, keyword2);
+                }
+            }
+        });
+
+        // ListViewのアイテムクリック時
+        createView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // 選択アイテムの取得
+                ListView listView = (ListView)parent;
+                SearchInfo item = (SearchInfo)listView.getItemAtPosition(position);
+                Log.d(TAG, "title:" + item.getTitle() + ", url:" + item.getUrl());
+                // 選択したサイトに遷移
+                Uri uri = Uri.parse(item.getUrl());
+                Intent i = new Intent(Intent.ACTION_VIEW,uri);
+                startActivity(i);
             }
         });
     }
 
+    // DBからkeywordをランダムで2件取得
+    private List<String> getKeyRand(){
+
+        List<String> kwList = new ArrayList<>();
+        // DBのオープン処理
+        MySQLiteOpenHelper helper = new MySQLiteOpenHelper(getApplicationContext());
+        final SQLiteDatabase mydb = helper.getWritableDatabase();
+        // SELECT
+        Cursor cursor = mydb.rawQuery("SELECT * FROM keywords_tbl ORDER BY RANDOM() LIMIT 2",
+                null);
+        // ランダムに取得したキーワードをセット
+        while(cursor.moveToNext()){
+            kwList.add(cursor.getString(cursor.getColumnIndex("keyword")));
+        }
+
+        return kwList;
+    }
 }

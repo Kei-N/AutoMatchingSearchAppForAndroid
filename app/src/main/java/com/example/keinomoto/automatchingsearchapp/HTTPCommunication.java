@@ -2,6 +2,7 @@ package com.example.keinomoto.automatchingsearchapp;
 
 import android.app.Activity;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -32,22 +33,19 @@ import java.util.List;
  *   ※ それぞれ不要な場合は、Voidを設定すれば良い
  */
 public class HTTPCommunication extends AsyncTask<String, Void, List<SearchInfo>> {
+    private final static String TAG = HTTPCommunication.class.getSimpleName();
 
     private Activity mActivity;
     private ListView createView;
-    private ArrayAdapter<SearchInfo> adapter;
+    private SearchResultAdapter adapter;
 
 
-    public HTTPCommunication(Activity activity){
+    public HTTPCommunication(Activity activity, ListView createView){
         mActivity = activity;
+        this.createView = createView;
     }
 
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        // doInBackground前処理
-    }
-
+    // TODO doInBackgroundが呼ばれない
     /*
      * バックグラウンドで実行する処理
      *
@@ -56,11 +54,12 @@ public class HTTPCommunication extends AsyncTask<String, Void, List<SearchInfo>>
      */
     @Override
     protected List<SearchInfo> doInBackground(String... params) {
+//        android.os.Debug.waitForDebugger();
         String google_url = params[0];
         String keyword1 = params[1];
         String keyword2 = params[2];
         // 検索結果格納用リスト生成
-        List<SearchInfo> searchResultList = new ArrayList<SearchInfo>();
+        List<SearchInfo> searchResultList = new ArrayList<>();
 
         try {
             // Documentクラスの変数を作成し、その変数に取得したHTML情報を代入
@@ -85,6 +84,8 @@ public class HTTPCommunication extends AsyncTask<String, Void, List<SearchInfo>>
                 searchInfo.setUrl(element.attr("href"));
                 // 検索結果をリストに追加
                 searchResultList.add(searchInfo);
+                Log.d(TAG, "scraping result: title" + searchInfo.getTitle()
+                + ", URL" + searchInfo.getUrl());
             }
 
         } catch (IOException e) {
@@ -101,10 +102,12 @@ public class HTTPCommunication extends AsyncTask<String, Void, List<SearchInfo>>
      */
     @Override
     protected void onPostExecute(List<SearchInfo> result) {
-        // Create結果をListViewに表示
+        // TODO Create結果をListViewに表示
         createView = (ListView)mActivity.findViewById(R.id.createResult);
-        adapter = new ArrayAdapter<SearchInfo>(mActivity, android.R.layout.simple_list_item_2, result);
+        adapter = new SearchResultAdapter(mActivity);
+        adapter.setSearchInfoList(result);
         createView.setAdapter(adapter);
+
     }
 
 }

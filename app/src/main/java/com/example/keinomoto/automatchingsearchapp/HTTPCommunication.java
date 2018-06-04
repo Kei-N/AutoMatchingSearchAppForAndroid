@@ -45,7 +45,6 @@ public class HTTPCommunication extends AsyncTask<String, Void, List<SearchInfo>>
         this.createView = createView;
     }
 
-    // TODO doInBackgroundが呼ばれない
     /*
      * バックグラウンドで実行する処理
      *
@@ -102,7 +101,6 @@ public class HTTPCommunication extends AsyncTask<String, Void, List<SearchInfo>>
      */
     @Override
     protected void onPostExecute(List<SearchInfo> result) {
-        // TODO Create結果をListViewに表示
         createView = (ListView)mActivity.findViewById(R.id.createResult);
         adapter = new SearchResultAdapter(mActivity);
         adapter.setSearchInfoList(result);
